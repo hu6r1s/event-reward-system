@@ -1,6 +1,9 @@
 services:
   auth:
-    build: ./services/auth
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile.dev
+    container_name: auth-server
     ports:
       - 3001:3000
     environment:
@@ -10,9 +13,16 @@ services:
       - MONGO_PORT=${MONGO_PORT}
       - DB_NAME=${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./services/auth/src:/auth/src
+      - ./services/auth/config:/auth/config
+      - ./services/auth/package-lock.json:/auth/package-lock.json
+      - ./services/auth/package.json:/auth/package.json
+      - ./services/auth/tsconfig.json:/auth/tsconfig.json
+      - ./services/auth/node_modules:/auth/node_modules
     depends_on:
       - mongodb
-      
+
   mongodb:
     container_name: mongodb
     image: mongo

@@ -1,0 +1,5 @@
+FROM node:18.20.8-alpine
+
+WORKDIR /auth
+
+CMD sh -c "npm i --frozen-lockfile && npm run start:dev"
