@@ -1,5 +1,5 @@
 import { IsIn, IsNotEmpty, Matches } from 'class-validator';
-import { Role } from '../schemas/user.schema';
+import { Role } from '../../user/schemas/user.schema';
 
 export class RegisterRequest {
   @IsNotEmpty({ message: 'Register username required' })
