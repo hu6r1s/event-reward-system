@@ -14,6 +14,7 @@ services:
       - DB_NAME=${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - PASSWORD_SALT_ROUNDS=${PASSWORD_SALT_ROUNDS}
+      - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
     volumes:
       - ./services/auth/src:/auth/src
       - ./services/auth/config:/auth/config

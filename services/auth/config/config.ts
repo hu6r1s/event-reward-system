@@ -8,11 +8,10 @@ export default registerAs('config', () => ({
     host: stringEnv('MONGO_HOST'),
     port: stringEnv('MONGO_PORT'),
   },
-  jwt: {
-    secret: stringEnv('JWT_SECRET'),
-  },
   auth: {
+    jwtSecret: stringEnv('JWT_SECRET'),
     saltRounds: numberEnv('PASSWORD_SALT_ROUNDS'),
+    expiresIn: stringEnv('ACCESS_TOKEN_EXPIRES_IN'),
   },
 }));
 
