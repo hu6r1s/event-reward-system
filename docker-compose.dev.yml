@@ -13,6 +13,7 @@ services:
       - MONGO_PORT=${MONGO_PORT}
       - DB_NAME=${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
+      - PASSWORD_SALT_ROUNDS=${PASSWORD_SALT_ROUNDS}
     volumes:
       - ./services/auth/src:/auth/src
       - ./services/auth/config:/auth/config
@@ -26,6 +27,7 @@ services:
   mongodb:
     container_name: mongodb
     image: mongo
+    restart: unless-stopped
     ports:
       - 27017:27017
     volumes:
