@@ -1,29 +1,74 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateEventRequest } from './dto/EventRequest.dto';
-import { EventResponse } from './dto/EventResponse.dto';
+import { EventStatus } from './constants/event.constants';
+import { CreateEventRequest } from './dto/create-event.dto';
+import { EventListResponse, EventResponse } from './dto/event-response.dto';
+import { QueryEventDto } from './dto/query-event.dto';
 import { EventDocument } from './schemas/event.schema';
 
 @Injectable()
 export class EventService {
   constructor(
-    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(Event.name) private readonly eventModel: Model<EventDocument>,
   ) {}
 
   async create(request: CreateEventRequest): Promise<{ _id: string }> {
-    const event = new this.eventModel(request);
+    const { startAt, endAt } = request;
+    if (new Date(endAt) <= new Date(startAt)) {
+      throw new BadRequestException('End date must be after start date');
+    }
+
+    let status = request.status;
+    if (!status) {
+      const now = new Date();
+      if (new Date(startAt) > now || new Date(endAt) < now) {
+        status = EventStatus.INACTIVE;
+      } else {
+        status = EventStatus.ACTIVE;
+      }
+    }
+
+    const event = new this.eventModel({ ...request, status });
     return { _id: (await event.save())._id.toString() };
   }
 
-  async findAll(): Promise<EventResponse[]> {
-    return await this.eventModel.find().exec();
+  async findAll(queryDto: QueryEventDto): Promise<EventListResponse> {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'endAt',
+      sortOrder = 'DESC',
+    } = queryDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.eventModel
+        .find()
+        .sort([[sortBy, sortOrder === 'ASC' ? 1 : -1]])
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.eventModel.countDocuments().exec(),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    } as EventListResponse;
   }
 
   async findById(_id: string): Promise<EventResponse> {
-    const event = await this.eventModel.findById(_id);
-    if (!event) throw new NotFoundException('Not found event');
-
+    const event = await this.eventModel.findById(_id).exec();
+    if (!event) {
+      throw new NotFoundException(`Event with ID "${_id}" not found`);
+    }
     return event;
   }
 }
