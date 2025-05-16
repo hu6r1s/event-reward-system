@@ -10,10 +10,7 @@ export default registerAs('config', () => ({
   },
   auth: {
     jwtAccessSecret: stringEnv('JWT_ACCESS_SECRET'),
-    jwtRefreshSecret: stringEnv('JWT_REFRESH_SECRET'),
     accessTokenExpiresIn: numberEnv('ACCESS_TOKEN_EXPIRES_IN'),
-    refreshTokenExpiresIn: numberEnv('REFRESH_TOKEN_EXPIRES_IN'),
-    saltRounds: numberEnv('PASSWORD_SALT_ROUNDS'),
   },
   redis: {
     host: stringEnv('REDIS_HOST'),
