@@ -9,9 +9,15 @@ export default registerAs('config', () => ({
     port: stringEnv('MONGO_PORT'),
   },
   auth: {
-    jwtSecret: stringEnv('JWT_SECRET'),
+    jwtAccessSecret: stringEnv('JWT_ACCESS_SECRET'),
+    jwtRefreshSecret: stringEnv('JWT_REFRESH_SECRET'),
+    accessTokenExpiresIn: numberEnv('ACCESS_TOKEN_EXPIRES_IN'),
+    refreshTokenExpiresIn: numberEnv('REFRESH_TOKEN_EXPIRES_IN'),
     saltRounds: numberEnv('PASSWORD_SALT_ROUNDS'),
-    expiresIn: stringEnv('ACCESS_TOKEN_EXPIRES_IN'),
+  },
+  redis: {
+    host: stringEnv('REDIS_HOST'),
+    port: numberEnv('REDIS_PORT'),
   },
 }));
 

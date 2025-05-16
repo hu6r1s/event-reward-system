@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { TokenService } from 'src/util/jwt.service';
 
 @Module({
   imports: [
@@ -14,13 +15,13 @@ import { AuthService } from './auth.service';
       useFactory: async (config: ConfigService) => {
         const authConfig = config.get('config.auth');
         return {
-          secret: authConfig.jwtSecret,
-          signOptions: { expiresIn: authConfig.expiresIn },
+          secret: authConfig.jwtAccessSecret,
+          signOptions: { expiresIn: authConfig.accessTokenExpiresIn },
         };
       },
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, TokenService],
   controllers: [AuthController],
 })
 export class AuthModule {}

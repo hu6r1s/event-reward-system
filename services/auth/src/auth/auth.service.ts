@@ -4,17 +4,23 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/user/user.service';
-import { LoginRequest, LoginResponse } from './dto/login.dto';
+import { TokenService } from 'src/util/jwt.service';
+import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
+
+export interface TokenPayload {
+  sub: string;
+  username: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private config: ConfigService,
-    private jwtService: JwtService,
+    private tokenService: TokenService,
     private userService: UserService,
   ) {}
 
@@ -40,7 +46,9 @@ export class AuthService {
     return { _id: newUser._id.toString() };
   }
 
-  async login(request: LoginRequest): Promise<LoginResponse> {
+  async login(
+    request: LoginRequest,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.userService.findOne({
       username: request.username,
     });
@@ -52,16 +60,20 @@ export class AuthService {
       request.password,
       user.password,
     );
+
     if (!passwordMatched) {
       throw new UnauthorizedException('Invalid username or password');
     }
 
-    const payload = {
+    const payload: TokenPayload = {
       sub: user._id.toString(),
       username: user.username,
       role: user.role,
     };
-    const accessToken = await this.jwtService.sign(payload);
-    return { accessToken } as LoginResponse;
+
+    const accessToken = await this.tokenService.generateAccessToken(payload);
+    const refreshToken = await this.tokenService.generateRefreshToken(payload);
+
+    return { accessToken, refreshToken };
   }
 }
