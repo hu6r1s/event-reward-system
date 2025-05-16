@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CreateEventRequest } from './dto/EventRequest.dto';
 import { EventService } from './event.service';
 import { EventResponse } from "./dto/EventResponse.dto";
@@ -15,5 +15,10 @@ export class EventController {
   @Get()
   async findAll(): Promise<EventResponse[]> {
     return await this.eventService.findAll();
+  }
+
+  @Get(":_id")
+  async findById(@Param('_id') _id: string): Promise<EventResponse> {
+    return await this.eventService.findById(_id);
   }
 }
