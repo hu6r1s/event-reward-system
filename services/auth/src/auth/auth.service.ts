@@ -76,4 +76,21 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
+  async refreshAccessToken(refreshToken: string) {
+    try {
+      const payload = await this.tokenService.tokenVerify(refreshToken);
+      const user = this.userService.findOne({ _id: payload.sub });
+      if (!user) throw new UnauthorizedException('Unverified user');
+
+      return await this.tokenService.generateAccessToken({
+        sub: payload.sub,
+        username: payload.username,
+        role: payload.role,
+      });
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }

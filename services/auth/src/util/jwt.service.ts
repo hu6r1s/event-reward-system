@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Cache } from 'cache-manager';
@@ -35,5 +35,21 @@ export class TokenService {
     );
 
     return refreshToken;
+  }
+
+  async tokenVerify(refreshToken: string) {
+    const payload = await this.jwtService.verifyAsync<TokenPayload>(
+      refreshToken,
+      {
+        secret: this.configService.get('config.auth').jwtRefreshSecret,
+      },
+    );
+
+    const storedToken = await this.cacheManager.get<string>(payload.sub);
+    if (!storedToken || storedToken !== refreshToken) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    return payload;
   }
 }

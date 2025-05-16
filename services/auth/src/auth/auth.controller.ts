@@ -1,5 +1,12 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
@@ -27,6 +34,17 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    return { accessToken } as LoginResponse;
+  }
+
+  @Post('refresh')
+  async refresh(@Req() request: Request): Promise<LoginResponse> {
+    const refreshToken = request.cookies['refresh_token'];
+    if (!refreshToken)
+      throw new UnauthorizedException('Refresh token not found');
+
+    const accessToken = await this.authService.refreshAccessToken(refreshToken);
+    
     return { accessToken } as LoginResponse;
   }
 }
