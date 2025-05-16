@@ -29,6 +29,34 @@ services:
     depends_on:
       - mongodb
 
+  event:
+    build:
+      context: ./services/event
+      dockerfile: Dockerfile.dev
+    container_name: event-server
+    ports:
+      - 3002:3000
+    environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - DB_NAME=${EVENT_DB_NAME}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - PASSWORD_SALT_ROUNDS=${PASSWORD_SALT_ROUNDS}
+      - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./services/event/src:/event/src
+      - ./services/event/config:/event/config
+      - ./services/event/package-lock.json:/event/package-lock.json
+      - ./services/event/package.json:/event/package.json
+      - ./services/event/tsconfig.json:/event/tsconfig.json
+      - ./services/event/node_modules:/event/node_modules
+    depends_on:
+      - mongodb
+
   mongodb:
     container_name: mongodb
     image: mongo
