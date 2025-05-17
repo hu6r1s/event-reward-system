@@ -5,7 +5,7 @@ export class EventListResponse {
   readonly limit: number;
 }
 
-class AllEventResponse {
+export class AllEventResponse {
   readonly name: string;
   readonly status: string;
   readonly startAt: Date;

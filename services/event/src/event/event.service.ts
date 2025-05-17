@@ -7,7 +7,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EventStatus } from './constants/event.constants';
 import { CreateEventRequest } from './dto/create-event.dto';
-import { EventListResponse, EventResponse } from './dto/event-response.dto';
+import {
+  AllEventResponse,
+  EventListResponse,
+  EventResponse,
+} from './dto/event-response.dto';
 import { QueryEventDto } from './dto/query-event.dto';
 import { EventDocument } from './schemas/event.schema';
 
@@ -41,15 +45,25 @@ export class EventService {
     const { page, limit, sortBy, sortOrder } = queryDto;
     const skip = (page - 1) * limit;
 
-    const [data, total] = await Promise.all([
+    const projection = Object.keys(new AllEventResponse()).join(' ');
+
+    const [rawData, total] = await Promise.all([
       this.eventModel
         .find()
+        .select(projection)
         .sort([[sortBy, sortOrder === 'ASC' ? 1 : -1]])
         .skip(skip)
         .limit(limit)
         .exec(),
       this.eventModel.countDocuments().exec(),
     ]);
+
+    const data: AllEventResponse[] = rawData.map((event) => ({
+      name: event.name,
+      status: event.status,
+      startAt: event.startAt,
+      endAt: event.endAt,
+    }));
 
     return {
       data,
