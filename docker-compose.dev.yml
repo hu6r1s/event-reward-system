@@ -47,6 +47,7 @@ services:
       - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
+      - AUTH_API_URI=${AUTH_API_URI}
     volumes:
       - ./services/event/src:/event/src
       - ./services/event/config:/event/config

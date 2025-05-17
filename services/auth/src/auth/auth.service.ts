@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,6 +10,7 @@ import { UserService } from 'src/user/user.service';
 import { TokenService } from 'src/util/jwt.service';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
+import { LoginStreakResponse } from "src/user/dto/user-login.dto";
 
 export interface TokenPayload {
   sub: string;
@@ -65,6 +67,33 @@ export class AuthService {
       throw new UnauthorizedException('Invalid username or password');
     }
 
+    const today = new Date();
+    const isSameDate =
+      user.lastLoginDate &&
+      today.getFullYear() === user.lastLoginDate.getFullYear() &&
+      today.getMonth() === user.lastLoginDate.getMonth() &&
+      today.getDate() === user.lastLoginDate.getDate();
+
+    if (!isSameDate) {
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
+      if (
+        !user.lastLoginDate ||
+        today.getTime() - user.lastLoginDate.getTime() <= oneDayInMs * 2
+      ) {
+        user.streakLogins += 1;
+      } else {
+        user.streakLogins = 1;
+      }
+
+      user.lastLoginDate = today;
+    }
+
+    await this.userService.update(user._id, {
+      streakLogins: user.streakLogins,
+      lastLoginDate: user.lastLoginDate,
+    });
+
     const payload: TokenPayload = {
       sub: user._id.toString(),
       username: user.username,
@@ -92,5 +121,16 @@ export class AuthService {
       console.log(error);
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async getUserLoginStreak(_id: string): Promise<LoginStreakResponse> {
+    const user = await this.userService.findOne({ _id });
+    if (!user) throw new NotFoundException(`User with ID ${_id} not found`);
+
+    return {
+      username: user.username,
+      streakLogins: user.streakLogins,
+      lastLoginDate: user.lastLoginDate,
+    } as LoginStreakResponse;
   }
 }

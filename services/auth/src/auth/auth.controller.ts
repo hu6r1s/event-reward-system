@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Req,
   Res,
@@ -10,6 +12,7 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
+import { LoginStreakResponse } from '../user/dto/user-login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -44,7 +47,14 @@ export class AuthController {
       throw new UnauthorizedException('Refresh token not found');
 
     const accessToken = await this.authService.refreshAccessToken(refreshToken);
-    
+
     return { accessToken } as LoginResponse;
+  }
+
+  @Get(':_id/login-streak')
+  async getLoginStreak(
+    @Param('_id') _id: string,
+  ): Promise<LoginStreakResponse> {
+    return this.authService.getUserLoginStreak(_id);
   }
 }

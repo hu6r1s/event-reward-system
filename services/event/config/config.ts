@@ -16,6 +16,9 @@ export default registerAs('config', () => ({
     host: stringEnv('REDIS_HOST'),
     port: numberEnv('REDIS_PORT'),
   },
+  uri: {
+    auth: stringEnv("AUTH_API_URI"),
+  }
 }));
 
 function stringEnv(name: string): string {

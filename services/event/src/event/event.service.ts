@@ -14,7 +14,7 @@ import {
 } from './dto/event-response.dto';
 import { EventRewardDto } from './dto/event-reward.dto';
 import { QueryEventDto } from './dto/query-event.dto';
-import { EventDocument } from './schemas/event.schema';
+import { Event, EventDocument } from './schemas/event.schema';
 
 @Injectable()
 export class EventService {
@@ -60,6 +60,7 @@ export class EventService {
     ]);
 
     const data: AllEventResponse[] = rawData.map((event) => ({
+      _id: event._id.toString(),
       name: event.name,
       status: event.status,
       startAt: event.startAt,

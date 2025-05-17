@@ -25,6 +25,12 @@ export class User {
 
   @Prop({ required: true, enum: Object.values(Role) })
   role: Role;
+
+  @Prop({ default: 0 })
+  streakLogins: number;
+
+  @Prop({ type: Date })
+  lastLoginDate: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -6,6 +6,7 @@ export class EventListResponse {
 }
 
 export class AllEventResponse {
+  readonly _id: string;
   readonly name: string;
   readonly status: string;
   readonly startAt: Date;

@@ -5,6 +5,7 @@ import configuration from '../config/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EventModule } from './event/event.module';
+import { RewardClaimsModule } from './reward-claims/reward-claims.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EventModule } from './event/event.module';
       },
     }),
     EventModule,
+    RewardClaimsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
