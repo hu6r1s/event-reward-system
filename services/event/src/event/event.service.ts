@@ -38,12 +38,7 @@ export class EventService {
   }
 
   async findAll(queryDto: QueryEventDto): Promise<EventListResponse> {
-    const {
-      page = 1,
-      limit = 10,
-      sortBy = 'endAt',
-      sortOrder = 'DESC',
-    } = queryDto;
+    const { page, limit, sortBy, sortOrder } = queryDto;
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
