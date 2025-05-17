@@ -12,6 +12,7 @@ import {
   EventListResponse,
   EventResponse,
 } from './dto/event-response.dto';
+import { EventRewardDto } from './dto/event-reward.dto';
 import { QueryEventDto } from './dto/query-event.dto';
 import { EventDocument } from './schemas/event.schema';
 
@@ -79,5 +80,17 @@ export class EventService {
       throw new NotFoundException(`Event with ID "${_id}" not found`);
     }
     return event;
+  }
+
+  async addRewardToEvent(
+    eventId: string,
+    rewardDto: EventRewardDto,
+  ): Promise<{ rewardId: string }> {
+    const event = await this.eventModel.findOne({ _id: eventId });
+    if (!event) throw new NotFoundException('Not found event');
+    event.rewards.push(rewardDto as EventRewardDto);
+    const savedEvent = await event.save();
+    const addReward = savedEvent.rewards[savedEvent.rewards.length - 1];
+    return { rewardId: addReward._id.toString() };
   }
 }

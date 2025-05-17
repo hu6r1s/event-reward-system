@@ -19,7 +19,7 @@ export class EventCondition {
 export const EventConditionSchema =
   SchemaFactory.createForClass(EventCondition);
 
-@Schema({ _id: false, versionKey: false })
+@Schema({ _id: true, versionKey: false })
 export class EventReward {
   @Prop({ enum: EventRewardType, required: true })
   type: EventRewardType;
