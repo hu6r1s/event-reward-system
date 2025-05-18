@@ -1,12 +1,15 @@
 import {
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { RewardClaimsService } from './reward-claims.service';
+import { UserId } from "./decorators/user-id.decorator";
 
 @Controller('reward-claims')
 export class RewardClaimsController {
@@ -16,10 +19,8 @@ export class RewardClaimsController {
   @HttpCode(HttpStatus.CREATED)
   async requestReward(
     @Param('eventId') eventId: string,
-    // @UserId() userId: string,
+    @UserId() userId: string,
   ): Promise<{ _id: string }> {
-    // TODO add userId info
-    // const userId = '6828ab4b4de696b8034c7633';
     if (!userId) throw new ForbiddenException('User ID not found in request');
     return this.rewardClaimsService.createClaim(eventId, userId);
   }
