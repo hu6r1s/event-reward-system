@@ -190,18 +190,22 @@ export class RewardClaimsService {
   async findAllClaimsByAdmin(
     queryDto: QueryRewardClaimDto,
   ): Promise<RewardClaimListResponse> {
-    const { page = 1, limit = 10 } = queryDto;
+    const { page = 1, limit = 10, eventId, status } = queryDto;
     const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = {};
+    if (eventId) filter.eventId = eventId;
+    if (status) filter.status = status;
 
     const [rawData, total] = await Promise.all([
       this.rewardClaimModel
-        .find()
+        .find(filter)
         .populate('eventId')
         .skip(skip)
         .limit(limit)
         .lean()
         .exec(),
-      this.rewardClaimModel.countDocuments().exec(),
+      this.rewardClaimModel.countDocuments(filter).exec(),
     ]);
 
     const data: AdminRewardClaimResponse[] = await Promise.all(
