@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
 import { LoginStreakResponse } from '../user/dto/user-login.dto';
+import { UserInfo } from "./dto/user-info.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -56,5 +57,12 @@ export class AuthController {
     @Param('_id') _id: string,
   ): Promise<LoginStreakResponse> {
     return this.authService.getUserLoginStreak(_id);
+  }
+
+  @Get(":_id")
+  async getUserInfo(
+    @Param("_id") _id: string,
+  ): Promise<UserInfo> {
+    return this.authService.getUserInfo(_id);
   }
 }

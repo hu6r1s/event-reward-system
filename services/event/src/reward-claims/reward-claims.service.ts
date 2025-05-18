@@ -17,7 +17,12 @@ import {
 import { ConditionResponse } from 'src/event/dto/event-response.dto';
 import { EventService } from 'src/event/event.service';
 import { RewardClaimStatus } from './constants/reward-claim.constants';
-import { UserRewardClaimResponse } from './dto/reward-claim.dto';
+import { QueryRewardClaimDto } from './dto/query-reward-claim.dto';
+import {
+  AdminRewardClaimResponse,
+  RewardClaimListResponse,
+  UserRewardClaimResponse,
+} from './dto/reward-claim.dto';
 import {
   RewardClaim,
   RewardClaimDocument,
@@ -180,5 +185,47 @@ export class RewardClaimsService {
         };
       }),
     );
+  }
+
+  async findAllClaimsByAdmin(
+    queryDto: QueryRewardClaimDto,
+  ): Promise<RewardClaimListResponse> {
+    const { page = 1, limit = 10 } = queryDto;
+    const skip = (page - 1) * limit;
+
+    const [rawData, total] = await Promise.all([
+      this.rewardClaimModel
+        .find()
+        .populate('eventId')
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+      this.rewardClaimModel.countDocuments().exec(),
+    ]);
+
+    const data: AdminRewardClaimResponse[] = await Promise.all(
+      rawData.map(async (claim) => {
+        const authServiceUrl = this.configService.get('config.uri').auth;
+        console.log(claim.userId.toString());
+        const response = await firstValueFrom(
+          this.httpService.get(`${authServiceUrl}/${claim.userId.toString()}`),
+        );
+        return {
+          user: {
+            username: response.data.username as string,
+            nickname: response.data.nickname as string,
+          },
+          event: {
+            name: (claim.eventId as any).name,
+            description: (claim.eventId as any).description,
+          },
+          status: claim.status,
+          rewardsGranted: claim.rewardsGranted,
+        } as AdminRewardClaimResponse;
+      }),
+    );
+
+    return { data, total, page, limit } as RewardClaimListResponse;
   }
 }

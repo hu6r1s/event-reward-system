@@ -11,6 +11,7 @@ import { UserService } from 'src/user/user.service';
 import { TokenService } from 'src/util/jwt.service';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
+import { UserInfo } from "./dto/user-info.dto";
 
 export interface TokenPayload {
   sub: string;
@@ -131,5 +132,15 @@ export class AuthService {
       streakLogins: user.streakLogins,
       lastLoginDate: user.lastLoginDate,
     } as LoginStreakResponse;
+  }
+
+  async getUserInfo(_id: string): Promise<UserInfo> {
+    const user = await this.userService.findOne({ _id });
+    if (!user) throw new NotFoundException(`User with ID ${_id} not found`);
+
+    return {
+      username: user.username,
+      nickname: user.nickname
+    } as UserInfo;
   }
 }

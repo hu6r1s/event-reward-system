@@ -14,8 +14,25 @@ export class RewardClaimEvent {
 
 export class EventGranted {
   type: EventRewardType;
-
   value: any;
-
   quantity: number;
+}
+
+export class UserInfo {
+  username: string;
+  nickname: string;
+}
+
+export class AdminRewardClaimResponse {
+  user: UserInfo;
+  event: RewardClaimEvent;
+  status: RewardClaimStatus;
+  rewardsGranted: EventGranted[];
+}
+
+export class RewardClaimListResponse {
+  readonly data: AdminRewardClaimResponse[];
+  readonly total: number;
+  readonly page: number;
+  readonly limit: number;
 }

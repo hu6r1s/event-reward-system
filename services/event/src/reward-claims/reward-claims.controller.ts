@@ -6,9 +6,14 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserId } from './decorators/user-id.decorator';
-import { UserRewardClaimResponse } from './dto/reward-claim.dto';
+import { QueryRewardClaimDto } from './dto/query-reward-claim.dto';
+import {
+  RewardClaimListResponse,
+  UserRewardClaimResponse,
+} from './dto/reward-claim.dto';
 import { RewardClaimsService } from './reward-claims.service';
 
 @Controller('reward-claims')
@@ -30,5 +35,12 @@ export class RewardClaimsController {
     @UserId() userId: string,
   ): Promise<UserRewardClaimResponse[]> {
     return this.rewardClaimsService.findUserClaims(userId);
+  }
+
+  @Get()
+  async getAllRewardClaims(
+    @Query() queryDto: QueryRewardClaimDto,
+  ): Promise<RewardClaimListResponse> {
+    return this.rewardClaimsService.findAllClaimsByAdmin(queryDto);
   }
 }
