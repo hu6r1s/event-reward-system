@@ -6,10 +6,10 @@ import {
   HttpStatus,
   Param,
   Post,
-  Query,
 } from '@nestjs/common';
+import { UserId } from './decorators/user-id.decorator';
+import { UserRewardClaimResponse } from './dto/reward-claim.dto';
 import { RewardClaimsService } from './reward-claims.service';
-import { UserId } from "./decorators/user-id.decorator";
 
 @Controller('reward-claims')
 export class RewardClaimsController {
@@ -23,5 +23,12 @@ export class RewardClaimsController {
   ): Promise<{ _id: string }> {
     if (!userId) throw new ForbiddenException('User ID not found in request');
     return this.rewardClaimsService.createClaim(eventId, userId);
+  }
+
+  @Get('me')
+  async getMyRewardClaims(
+    @UserId() userId: string,
+  ): Promise<UserRewardClaimResponse[]> {
+    return this.rewardClaimsService.findUserClaims(userId);
   }
 }

@@ -1,33 +1,7 @@
 import { Type } from 'class-transformer';
-import {
-  IsDate,
-  IsEnum,
-  IsInt,
-  IsMongoId,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
-import { RewardClaimStatus } from '../constants/reward-claim.constants';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class QueryRewardClaimDto {
-  @IsOptional()
-  @IsMongoId()
-  userId: string; // 관리자용 필터
-
-  @IsOptional()
-  @IsMongoId()
-  eventId: string; // 관리자 및 사용자용 필터
-
-  @IsOptional()
-  @IsEnum(RewardClaimStatus)
-  status: RewardClaimStatus; // 관리자 및 사용자용 필터
-
-  @IsDate()
-  @Type(() => Date)
-  requestedAt: Date;
-
   @IsOptional()
   @Type(() => Number)
   @IsInt()

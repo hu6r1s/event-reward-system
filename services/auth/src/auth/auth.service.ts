@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { LoginStreakResponse } from 'src/user/dto/user-login.dto';
 import { UserService } from 'src/user/user.service';
 import { TokenService } from 'src/util/jwt.service';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
-import { LoginStreakResponse } from "src/user/dto/user-login.dto";
 
 export interface TokenPayload {
   sub: string;
@@ -111,7 +111,6 @@ export class AuthService {
       const payload = await this.tokenService.tokenVerify(refreshToken);
       const user = this.userService.findOne({ _id: payload.sub });
       if (!user) throw new UnauthorizedException('Unverified user');
-
       return await this.tokenService.generateAccessToken({
         sub: payload.sub,
         username: payload.username,

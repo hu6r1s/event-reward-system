@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import {
 import { ConditionResponse } from 'src/event/dto/event-response.dto';
 import { EventService } from 'src/event/event.service';
 import { RewardClaimStatus } from './constants/reward-claim.constants';
+import { UserRewardClaimResponse } from './dto/reward-claim.dto';
 import {
   RewardClaim,
   RewardClaimDocument,
@@ -154,5 +156,29 @@ export class RewardClaimsService {
         console.warn(`Unknown condition type: ${condition.type}`);
         return false;
     }
+  }
+
+  async findUserClaims(userId: string): Promise<UserRewardClaimResponse[]> {
+    if (!userId) throw new ForbiddenException('User ID not found in request');
+    const claims = await this.rewardClaimModel.find({ userId }).exec();
+
+    return await Promise.all(
+      claims.map(async (claim) => {
+        const eventId = claim.eventId.toString();
+        const event = await this.eventService.findById(eventId);
+        return {
+          event: {
+            name: event.name,
+            description: event.description,
+          },
+          status: claim.status,
+          rewardsGranted: claim.rewardsGranted.map((reward) => ({
+            type: reward.type,
+            value: reward.value,
+            quantity: reward.quantity,
+          })),
+        };
+      }),
+    );
   }
 }
