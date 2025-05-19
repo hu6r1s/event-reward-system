@@ -11,7 +11,7 @@ import { UserService } from 'src/user/user.service';
 import { TokenService } from 'src/util/jwt.service';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
-import { UserInfo } from "./dto/user-info.dto";
+import { UserInfo } from './dto/user-info.dto';
 
 export interface TokenPayload {
   sub: string;
@@ -140,7 +140,7 @@ export class AuthService {
 
     return {
       username: user.username,
-      nickname: user.nickname
+      nickname: user.nickname,
     } as UserInfo;
   }
 }

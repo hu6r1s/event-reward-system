@@ -7,8 +7,3 @@ export class LoginRequest {
   @IsNotEmpty({ message: 'Login password required' })
   readonly password: string;
 }
-
-export class LoginResponse {
-  readonly accessToken: string;
-  readonly refreshToken: string;
-}

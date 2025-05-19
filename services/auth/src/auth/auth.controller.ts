@@ -1,68 +1,72 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Req,
-  Res,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Controller, Logger } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { LoginStreakResponse } from '../user/dto/user-login.dto';
 import { AuthService } from './auth.service';
 import { LoginRequest, LoginResponse } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
-import { LoginStreakResponse } from '../user/dto/user-login.dto';
-import { UserInfo } from "./dto/user-info.dto";
+import { UserInfo } from './dto/user-info.dto';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() request: RegisterRequest): Promise<{ _id: string }> {
-    return await this.authService.register(request);
+  @MessagePattern({ cmd: 'register_user' })
+  async register(
+    @Payload() payload: RegisterRequest,
+  ): Promise<{ _id: string }> {
+    try {
+      return await this.authService.register(payload);
+    } catch (err) {
+      this.logger.error(`Error in register_user: ${err.message}`, err.stack);
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Post('login')
-  async login(
-    @Body() request: LoginRequest,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<LoginResponse> {
-    const { accessToken, refreshToken } = await this.authService.login(request);
+  @MessagePattern({ cmd: 'login_user' })
+  async login(@Payload() payload: LoginRequest): Promise<LoginResponse> {
+    try {
+      const { accessToken, refreshToken } =
+        await this.authService.login(payload);
 
-    response.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return { accessToken } as LoginResponse;
+      return { accessToken, refreshToken } as LoginResponse;
+    } catch (err) {
+      this.logger.error(`Error in login_user: ${err.message}`, err.stack);
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Post('refresh')
-  async refresh(@Req() request: Request): Promise<LoginResponse> {
-    const refreshToken = request.cookies['refresh_token'];
-    if (!refreshToken)
-      throw new UnauthorizedException('Refresh token not found');
-
-    const accessToken = await this.authService.refreshAccessToken(refreshToken);
-
-    return { accessToken } as LoginResponse;
+  @MessagePattern({ cmd: 'user_token_refresh' })
+  async refresh(@Payload() refreshToken: string): Promise<LoginResponse> {
+    try {
+      const accessToken =
+        await this.authService.refreshAccessToken(refreshToken);
+      return { accessToken } as LoginResponse;
+    } catch (err) {
+      this.logger.error(
+        `Error in user_token_refresh: ${err.message}`,
+        err.stack,
+      );
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Get(':_id/login-streak')
-  async getLoginStreak(
-    @Param('_id') _id: string,
-  ): Promise<LoginStreakResponse> {
-    return this.authService.getUserLoginStreak(_id);
+  @MessagePattern({ cmd: 'user_login_streak' })
+  async getLoginStreak(@Payload() _id: string): Promise<LoginStreakResponse> {
+    try {
+      return this.authService.getUserLoginStreak(_id);
+    } catch (err) {
+      this.logger.error(
+        `Error in user_login_streak: ${err.message}`,
+        err.stack,
+      );
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Get(":_id")
-  async getUserInfo(
-    @Param("_id") _id: string,
-  ): Promise<UserInfo> {
+  @MessagePattern({ cmd: 'user_info' })
+  async getUserInfo(@Payload() _id: string): Promise<UserInfo> {
     return this.authService.getUserInfo(_id);
   }
 }
