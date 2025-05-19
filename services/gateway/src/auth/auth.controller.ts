@@ -16,12 +16,24 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import {
+  ApiBody,
+  ApiConflictResponse,
+  ApiCookieAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { catchError, firstValueFrom, timeout } from 'rxjs';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -96,6 +108,19 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Register a new user',
+    description: 'Creates a new user account',
+  })
+  @ApiBody({ type: RegisterRequest })
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
+  })
+  @ApiConflictResponse({ description: 'username already exists' })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid input data',
+  })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(
@@ -106,6 +131,17 @@ export class AuthController {
     return this.handleAuthResponse(observable, response);
   }
 
+  @ApiOperation({
+    summary: 'User login',
+    description: 'Logs in an existing user and returns an access token',
+  })
+  @ApiBody({ type: LoginRequest })
+  @ApiOkResponse({
+    description:
+      'Login successful, accessToken returned. Refresh token set in HTTPOnly cookie',
+    type: Response,
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -116,6 +152,17 @@ export class AuthController {
     return this.handleAuthResponse(observable, response);
   }
 
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description:
+      'Generates a new access token using a refresh token from cookie',
+  })
+  @ApiCookieAuth('refreshTokenCookie')
+  @ApiOkResponse({
+    description: 'Access token refreshed successfully',
+    type: Response,
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing refresh token' })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
