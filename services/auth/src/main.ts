@@ -9,7 +9,6 @@ async function bootstrap() {
   const configService = appContext.get(ConfigService);
   const host = configService.get('config.gateway').host;
   const port = configService.get('config.gateway').port;
-  console.log(host);
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {

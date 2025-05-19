@@ -44,53 +44,14 @@ export class RewardClaimsService {
     const eventId = new Types.ObjectId(eventIdStr);
     const userId = new Types.ObjectId(userIdStr);
 
-    const event = await this.eventService.findById(eventIdStr);
-    if (event.status !== EventStatus.ACTIVE) {
-      throw new BadRequestException('Event is not active.');
-    }
-    const now = new Date();
-    if (now < new Date(event.startAt) || now > new Date(event.endAt)) {
-      throw new BadRequestException('Event is not within the claim period');
-    }
+    const event = await this.validateEventForClaim(eventIdStr);
 
-    const existingSuccessClaim = await this.rewardClaimModel.findOne({
-      userId,
-      eventId,
-      status: RewardClaimStatus.SUCCESS,
-    });
-    if (existingSuccessClaim) {
-      throw new ConflictException('Reward already claimed for this event');
-    }
+    await this.ensureNoDuplicateClaim(userId, eventId);
 
-    const existingPendingClaim = await this.rewardClaimModel.findOne({
-      userId,
-      eventId,
-      status: RewardClaimStatus.PENDING,
-    });
-    if (existingPendingClaim) {
-      throw new ConflictException(
-        'A claim request for this event is already pending',
-      );
-    }
-
-    let conditionsMet = true;
-    let failureReason = '';
-
-    if (event.conditions && event.conditions.length > 0) {
-      try {
-        conditionsMet = await this.checkAllEventConditions(
-          userIdStr,
-          event.conditions,
-        );
-      } catch (error) {
-        throw new InternalServerErrorException(
-          'Failed to verify event conditions due to an external error',
-        );
-      }
-      if (!conditionsMet) {
-        failureReason = 'Event conditions not met';
-      }
-    }
+    const { conditionsMet, failureReason } = await this.evaluateEventConditions(
+      userIdStr,
+      event.conditions,
+    );
 
     const newClaim = new this.rewardClaimModel({
       userId,
@@ -114,6 +75,66 @@ export class RewardClaimsService {
     }
 
     return { _id: newClaim._id.toString() };
+  }
+
+  private async validateEventForClaim(eventIdStr: string) {
+    const event = await this.eventService.findById(eventIdStr);
+    if (event.status !== EventStatus.ACTIVE) {
+      throw new BadRequestException('Event is not active.');
+    }
+    const now = new Date();
+    if (now < new Date(event.startAt) || now > new Date(event.endAt)) {
+      throw new BadRequestException('Event is not within the claim period');
+    }
+    return event;
+  }
+  private async ensureNoDuplicateClaim(
+    userId: Types.ObjectId,
+    eventId: Types.ObjectId,
+  ) {
+    const existingSuccessClaim = await this.rewardClaimModel.findOne({
+      userId,
+      eventId,
+      status: RewardClaimStatus.SUCCESS,
+    });
+    if (existingSuccessClaim) {
+      throw new ConflictException('Reward already claimed for this event');
+    }
+
+    const existingPendingClaim = await this.rewardClaimModel.findOne({
+      userId,
+      eventId,
+      status: RewardClaimStatus.PENDING,
+    });
+    if (existingPendingClaim) {
+      throw new ConflictException(
+        'A claim request for this event is already pending',
+      );
+    }
+  }
+  private async evaluateEventConditions(
+    userIdStr: string,
+    conditions: ConditionResponse[],
+  ) {
+    let conditionsMet = true;
+    let failureReason = '';
+
+    if (conditions && conditions.length > 0) {
+      try {
+        conditionsMet = await this.checkAllEventConditions(
+          userIdStr,
+          conditions,
+        );
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Failed to verify event conditions due to an external error',
+        );
+      }
+      if (!conditionsMet) {
+        failureReason = 'Event conditions not met';
+      }
+    }
+    return { conditionsMet, failureReason };
   }
 
   private async checkAllEventConditions(
@@ -208,7 +229,6 @@ export class RewardClaimsService {
       this.rewardClaimModel.countDocuments(filter).exec(),
     ]);
 
-    console.log(rawData);
     const data: AdminRewardClaimResponse[] = await Promise.all(
       rawData.map(async (claim) => {
         const response = await firstValueFrom(
@@ -217,7 +237,6 @@ export class RewardClaimsService {
             { _id: claim.userId.toString() },
           ),
         );
-        console.log(response);
         return {
           user: {
             username: response.username as string,
@@ -232,7 +251,6 @@ export class RewardClaimsService {
         } as AdminRewardClaimResponse;
       }),
     );
-    console.log(data);
 
     return { data, total, page, limit } as RewardClaimListResponse;
   }
