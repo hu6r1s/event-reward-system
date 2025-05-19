@@ -58,7 +58,6 @@ export class RewardClaimsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR', 'AUDITOR', 'ADMIN')
   async getAllRewardClaims(@Query() queryDto: QueryRewardClaimDto) {
-    console.log(queryDto);
     return this.rpcHelper.sendToEventService(
       this.eventClient,
       { cmd: 'op_reward_claims' },

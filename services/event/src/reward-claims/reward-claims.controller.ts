@@ -46,7 +46,6 @@ export class RewardClaimsController {
     @Payload() queryDto: QueryRewardClaimDto,
   ): Promise<RewardClaimListResponse> {
     try {
-      console.log(queryDto);
       return this.rewardClaimsService.findAllClaimsByAdmin(queryDto);
     } catch (err) {
       this.logger.error(`Error in add_reward_claim: ${err.message}`, err.stack);

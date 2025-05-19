@@ -29,7 +29,6 @@ export class EventController {
     @Payload() queryDto: QueryEventDto,
   ): Promise<EventListResponse> {
     try {
-      console.log(queryDto);
       return await this.eventService.findAll(queryDto);
     } catch (err) {
       this.logger.error(`Error in event_all_search: ${err.message}`, err.stack);

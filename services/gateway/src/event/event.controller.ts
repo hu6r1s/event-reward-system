@@ -42,7 +42,6 @@ export class EventController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async findAll(@Query() queryDto: QueryEventDto) {
-    console.log(queryDto);
     return this.rpcHelper.sendToEventService(
       this.eventClient,
       { cmd: 'event_all_search' },
