@@ -12,10 +12,6 @@ export default registerAs('config', () => ({
     jwtAccessSecret: stringEnv('JWT_ACCESS_SECRET'),
     accessTokenExpiresIn: numberEnv('ACCESS_TOKEN_EXPIRES_IN'),
   },
-  redis: {
-    host: stringEnv('REDIS_HOST'),
-    port: numberEnv('REDIS_PORT'),
-  },
   gateway: {
     authHost: stringEnv('AUTH_SERVICE_HOST'),
     authPort: numberEnv('AUTH_SERVICE_PORT'),
