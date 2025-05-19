@@ -1,11 +1,11 @@
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EventModule } from 'src/event/event.module';
 import { RewardClaimsController } from './reward-claims.controller';
+import { RewardClaimsService } from './reward-claims.service';
 import { RewardClaim, RewardClaimSchema } from './schemas/reward-claim.schema';
-import { RewardClaimsService } from "./reward-claims.service";
 
 @Module({
   imports: [
@@ -13,10 +13,26 @@ import { RewardClaimsService } from "./reward-claims.service";
     MongooseModule.forFeature([
       { name: RewardClaim.name, schema: RewardClaimSchema },
     ]),
-    HttpModule,
+    ClientsModule.registerAsync([
+      {
+        name: 'AUTH_SERVICE',
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (config: ConfigService) => {
+          const gateway = config.get('config.gateway');
+          return {
+            transport: Transport.TCP,
+            options: {
+              host: gateway.authHost,
+              port: gateway.authPort,
+            },
+          };
+        },
+      },
+    ]),
     EventModule,
   ],
   controllers: [RewardClaimsController],
-  providers: [RewardClaimsService]
+  providers: [RewardClaimsService, ClientsModule],
 })
 export class RewardClaimsModule {}

@@ -134,17 +134,6 @@ export class AuthController {
     return this.handleAuthResponse(observable, response);
   }
 
-  @Get(':_id/login-streak')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  async getLoginStreak(
-    @Param('_id') _id: string,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    const observable = this.authClient.send({ cmd: 'user_login_streak' }, _id);
-    return this.handleAuthResponse(observable, response);
-  }
-
   @Get(':_id')
   async getUserInfo(
     @Param('_id') _id: string,

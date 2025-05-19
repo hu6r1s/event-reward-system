@@ -1,46 +1,56 @@
-import {
-  Controller,
-  ForbiddenException,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
-import { UserId } from './decorators/user-id.decorator';
+import { Controller, Logger } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { QueryRewardClaimDto } from './dto/query-reward-claim.dto';
 import {
   RewardClaimListResponse,
   UserRewardClaimResponse,
 } from './dto/reward-claim.dto';
+import { AuthenticatedUser } from './interfaces/user.interface';
 import { RewardClaimsService } from './reward-claims.service';
 
-@Controller('reward-claims')
+@Controller()
 export class RewardClaimsController {
+  private readonly logger = new Logger(RewardClaimsController.name);
+
   constructor(private readonly rewardClaimsService: RewardClaimsService) {}
 
-  @Post('events/:eventId')
-  @HttpCode(HttpStatus.CREATED)
+  @MessagePattern({ cmd: 'add_reward_claim' })
   async requestReward(
-    @Param('eventId') eventId: string,
-    @UserId() userId: string,
+    @Payload() data: { eventId: string; userContext: AuthenticatedUser },
   ): Promise<{ _id: string }> {
-    if (!userId) throw new ForbiddenException('User ID not found in request');
-    return this.rewardClaimsService.createClaim(eventId, userId);
+    try {
+      return this.rewardClaimsService.createClaim(
+        data.eventId,
+        data.userContext.userId,
+      );
+    } catch (err) {
+      this.logger.error(`Error in add_reward_claim: ${err.message}`, err.stack);
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Get('me')
+  @MessagePattern({ cmd: 'my_reward_claims' })
   async getMyRewardClaims(
-    @UserId() userId: string,
+    @Payload() data: { userContext: AuthenticatedUser },
   ): Promise<UserRewardClaimResponse[]> {
-    return this.rewardClaimsService.findUserClaims(userId);
+    try {
+      return this.rewardClaimsService.findUserClaims(data.userContext.userId);
+    } catch (err) {
+      this.logger.error(`Error in add_reward_claim: ${err.message}`, err.stack);
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 
-  @Get()
+  @MessagePattern({ cmd: 'op_reward_claims' })
   async getAllRewardClaims(
-    @Query() queryDto: QueryRewardClaimDto,
+    @Payload() queryDto: QueryRewardClaimDto,
   ): Promise<RewardClaimListResponse> {
-    return this.rewardClaimsService.findAllClaimsByAdmin(queryDto);
+    try {
+      console.log(queryDto);
+      return this.rewardClaimsService.findAllClaimsByAdmin(queryDto);
+    } catch (err) {
+      this.logger.error(`Error in add_reward_claim: ${err.message}`, err.stack);
+      throw new RpcException({ status: err.status, message: err.message });
+    }
   }
 }

@@ -11,7 +11,7 @@ export class QueryEventDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @Min(10)
   @Max(100)
   limit?: number = 10;
 

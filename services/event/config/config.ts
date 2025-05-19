@@ -16,9 +16,12 @@ export default registerAs('config', () => ({
     host: stringEnv('REDIS_HOST'),
     port: numberEnv('REDIS_PORT'),
   },
-  uri: {
-    auth: stringEnv("AUTH_API_URI"),
-  }
+  gateway: {
+    authHost: stringEnv('AUTH_SERVICE_HOST'),
+    authPort: numberEnv('AUTH_SERVICE_PORT'),
+    eventHost: stringEnv('EVENT_SERVICE_HOST'),
+    eventPort: numberEnv('EVENT_SERVICE_PORT'),
+  },
 }));
 
 function stringEnv(name: string): string {

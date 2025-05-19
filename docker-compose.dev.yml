@@ -36,8 +36,6 @@ services:
       context: ./services/event
       dockerfile: Dockerfile.dev
     container_name: event-server
-    ports:
-      - 3002:3000
     environment:
       - MONGO_USER=${MONGO_USER}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
@@ -50,6 +48,10 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - AUTH_API_URI=${AUTH_API_URI}
+      - AUTH_SERVICE_HOST=${AUTH_SERVICE_HOST}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
+      - EVENT_SERVICE_HOST=${EVENT_SERVICE_HOST}
+      - EVENT_SERVICE_PORT=${EVENT_SERVICE_PORT}
     volumes:
       - ./services/event/src:/event/src
       - ./services/event/config:/event/config

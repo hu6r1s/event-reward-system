@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { RewardClaimStatus } from '../constants/reward-claim.constants';
 
-export class QueryRewardClaimDto {
+export class QueryEventDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -12,15 +11,15 @@ export class QueryRewardClaimDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(10)
+  @Min(1)
   @Max(100)
   limit?: number = 10;
 
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  eventId?: string;
+  sortBy?: string = 'endAt';
 
-  @IsEnum(RewardClaimStatus)
   @IsOptional()
-  status?: RewardClaimStatus;
+  @IsEnum(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC' = 'DESC';
 }

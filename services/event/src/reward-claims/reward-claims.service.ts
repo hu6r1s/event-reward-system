@@ -1,12 +1,12 @@
-import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ClientProxy } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
@@ -34,8 +34,7 @@ export class RewardClaimsService {
     @InjectModel(RewardClaim.name)
     private readonly rewardClaimModel: Model<RewardClaimDocument>,
     private readonly eventService: EventService,
-    private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
+    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
   ) {}
 
   async createClaim(
@@ -134,12 +133,11 @@ export class RewardClaimsService {
   ): Promise<boolean> {
     switch (condition.type) {
       case EventConditionType.LOGIN_STREAK:
-        const authServiceUrl = this.configService.get('config.uri').auth;
         try {
           const response = await firstValueFrom(
-            this.httpService.get(`${authServiceUrl}/${userId}/login-streak`),
+            this.authClient.send({ cmd: 'user_login_streak' }, { _id: userId }),
           );
-          return response.data.streakLogins >= condition.value;
+          return response.streakLogins >= condition.value;
         } catch (error) {
           console.error('Error fetching login streak:', error);
           return false;
@@ -164,6 +162,7 @@ export class RewardClaimsService {
   }
 
   async findUserClaims(userId: string): Promise<UserRewardClaimResponse[]> {
+    console.log(userId);
     if (!userId) throw new ForbiddenException('User ID not found in request');
     const claims = await this.rewardClaimModel.find({ userId }).exec();
 
@@ -190,8 +189,9 @@ export class RewardClaimsService {
   async findAllClaimsByAdmin(
     queryDto: QueryRewardClaimDto,
   ): Promise<RewardClaimListResponse> {
-    const { page = 1, limit = 10, eventId, status } = queryDto;
+    const { page, limit, eventId, status } = queryDto;
     const skip = (page - 1) * limit;
+    console.log(page, limit, eventId, status);
 
     const filter: Record<string, any> = {};
     if (eventId) filter.eventId = eventId;
@@ -208,17 +208,20 @@ export class RewardClaimsService {
       this.rewardClaimModel.countDocuments(filter).exec(),
     ]);
 
+    console.log(rawData);
     const data: AdminRewardClaimResponse[] = await Promise.all(
       rawData.map(async (claim) => {
-        const authServiceUrl = this.configService.get('config.uri').auth;
-        console.log(claim.userId.toString());
         const response = await firstValueFrom(
-          this.httpService.get(`${authServiceUrl}/${claim.userId.toString()}`),
+          this.authClient.send(
+            { cmd: 'user_info' },
+            { _id: claim.userId.toString() },
+          ),
         );
+        console.log(response);
         return {
           user: {
-            username: response.data.username as string,
-            nickname: response.data.nickname as string,
+            username: response.username as string,
+            nickname: response.nickname as string,
           },
           event: {
             name: (claim.eventId as any).name,
@@ -229,6 +232,7 @@ export class RewardClaimsService {
         } as AdminRewardClaimResponse;
       }),
     );
+    console.log(data);
 
     return { data, total, page, limit } as RewardClaimListResponse;
   }
