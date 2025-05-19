@@ -88,6 +88,7 @@ export class RewardClaimsService {
     }
     return event;
   }
+  
   private async ensureNoDuplicateClaim(
     userId: Types.ObjectId,
     eventId: Types.ObjectId,
@@ -112,6 +113,7 @@ export class RewardClaimsService {
       );
     }
   }
+
   private async evaluateEventConditions(
     userIdStr: string,
     conditions: ConditionResponse[],
