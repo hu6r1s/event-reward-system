@@ -12,11 +12,13 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { Request, Response } from 'express';
 import { catchError, firstValueFrom, timeout } from 'rxjs';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { LoginRequest } from './dto/login.dto';
 import { RegisterRequest } from './dto/register.dto';
 
@@ -116,6 +118,7 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
   async refresh(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -132,6 +135,8 @@ export class AuthController {
   }
 
   @Get(':_id/login-streak')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
   async getLoginStreak(
     @Param('_id') _id: string,
     @Res({ passthrough: true }) response: Response,

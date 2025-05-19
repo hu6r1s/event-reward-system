@@ -4,7 +4,6 @@ export default registerAs('config', () => ({
   auth: {
     jwtAccessSecret: stringEnv('JWT_ACCESS_SECRET'),
     accessTokenExpiresIn: numberEnv('ACCESS_TOKEN_EXPIRES_IN'),
-    jwtRefreshSecret: stringEnv('JWT_REFRESH_SECRET'),
     refreshTokenExpiresIn: numberEnv('REFRESH_TOKEN_EXPIRES_IN'),
   },
   uri: {
