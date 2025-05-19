@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RpcHelperService } from './util/rpc-helper.service';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [JwtStrategy, RolesGuard],
-  exports: [ClientsModule, PassportModule, RolesGuard],
+  providers: [JwtStrategy, RolesGuard, RpcHelperService],
+  exports: [ClientsModule, PassportModule, RolesGuard, RpcHelperService],
 })
 export class AuthModule {}

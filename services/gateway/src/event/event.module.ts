@@ -6,7 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/auth/strategies/jwt.strategy';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { EventController } from './event.controller';
-import { RpcHelperService } from './util/send-service.util';
+import { RpcHelperService } from './util/rpc-helper.service';
 
 @Module({
   imports: [

@@ -14,7 +14,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { AuthenticatedUser, User } from 'src/auth/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
-import { RpcHelperService } from '../util/send-service.util';
+import { RpcHelperService } from '../util/rpc-helper.service';
 import { QueryRewardClaimDto } from './dto/query-reward-claim.dto';
 
 @Controller('reward-claims')

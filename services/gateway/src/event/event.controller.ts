@@ -17,7 +17,7 @@ import { RolesGuard } from 'src/guards/roles.guard';
 import { CreateEventRequest } from './dto/create-event.dto';
 import { EventRewardDto } from './dto/event-reward.dto';
 import { QueryEventDto } from './dto/query-event.dto';
-import { RpcHelperService } from './util/send-service.util';
+import { RpcHelperService } from './util/rpc-helper.service';
 
 @Controller('events')
 export class EventController {
