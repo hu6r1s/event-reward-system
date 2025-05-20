@@ -51,8 +51,9 @@
     * `refreshToken`은 보안 강화를 위해 HTTPOnly, Secure, SameSite 속성을 가진 쿠키로 전달하고, Access Token은 응답 본문으로 전달합니다.
 
 ## 5. 개선 사항 및 추후계획
-* **예외처리 미흡**<br>
-서비스 로직에서 RpcException을 통해 예외를 처리하고자 했으나, 클라이언트에 의도한 HTTP 응답 코드와 메시지가 전달되지 않고 모두 `Internal Server Error`로 응답되는 문제가 발생했습니다. 이는 예외 핸들링이 전파 과정에서 적절히 매핑되지 않았기 때문으로 보이며, 향후 `ExceptionFilter`를 커스터마이징하거나 예외 전달 방식(`throw`)을 보다 명확히 분리하여 개선이 필요합니다.
+* **예외처리 미흡** - 해결<br>
+`Auth`, `Event`마이크로 서비스의 `HttpException`을 `RpcException`으로 수정하고, error message와 status를 `Gateway` 서비스에서 `HttpException`으로 반환하도록 하여 해결 <br>
+~~서비스 로직에서 RpcException을 통해 예외를 처리하고자 했으나, 클라이언트에 의도한 HTTP 응답 코드와 메시지가 전달되지 않고 모두 `Internal Server Error`로 응답되는 문제가 발생했습니다. 이는 예외 핸들링이 전파 과정에서 적절히 매핑되지 않았기 때문으로 보이며, 향후 `ExceptionFilter`를 커스터마이징하거나 예외 전달 방식(`throw`)을 보다 명확히 분리하여 개선이 필요합니다.~~
 * **API 명세 미완성**<br>
 Swagger를 통한 API 명세 작업을 일부만 완료하였고, 전체 API에 대한 스펙 정리 및 설명이 부족한 상태입니다. 향후 모든 API 엔드포인트에 대해 명확한 입력/출력 및 응답 예시 등을 포함하여 명세를 보완할 예정입니다.
 * **테스트 코드 미작성**<br>
@@ -68,7 +69,7 @@ Swagger를 통한 API 명세 작업을 일부만 완료하였고, 전체 API에 
 * Docker Compose
 
 ### API 명세
-`http://localhost:3000/docs`
+[http://localhost:3000/docs](http://localhost:3000/docs)
 
 ### 환경 설정
 1.  최상단 디렉토리의 루트(`docker-compose.yml`과 같은 위치)에 `.env` 파일을 생성합니다.
