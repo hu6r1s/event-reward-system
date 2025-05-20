@@ -1,22 +1,76 @@
 services:
   auth:
-    build: ./services/auth
-    ports:
-      - 3001:3000
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: auth-server
+    restart: unless-stopped
     environment:
       - MONGO_USER=${MONGO_USER}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
       - DB_NAME=${AUTH_DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - PASSWORD_SALT_ROUNDS=${PASSWORD_SALT_ROUNDS}
       - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
+      - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - AUTH_SERVICE_HOST=${AUTH_SERVICE_HOST}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
     depends_on:
       - mongodb
-      
+    networks:
+      - microservices-net
+
+  event:
+    build:
+      context: ./services/event
+      dockerfile: Dockerfile
+    container_name: event-server
+    restart: unless-stopped
+    environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - DB_NAME=${EVENT_DB_NAME}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
+      - AUTH_SERVICE_HOST=${AUTH_SERVICE_HOST}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
+      - EVENT_SERVICE_HOST=${EVENT_SERVICE_HOST}
+      - EVENT_SERVICE_PORT=${EVENT_SERVICE_PORT}
+    depends_on:
+      - mongodb
+    networks:
+      - microservices-net
+
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: gateway-server
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - ACCESS_TOKEN_EXPIRES_IN=${ACCESS_TOKEN_EXPIRES_IN}
+      - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN}
+      - AUTH_SERVICE_HOST=${AUTH_SERVICE_HOST}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
+      - EVENT_SERVICE_HOST=${EVENT_SERVICE_HOST}
+      - EVENT_SERVICE_PORT=${EVENT_SERVICE_PORT}
+    networks:
+      - microservices-net
+
   mongodb:
     container_name: mongodb
     image: mongo
+    restart: unless-stopped
     ports:
       - 27017:27017
     volumes:
@@ -24,7 +78,22 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    networks:
+      - microservices-net
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+
+networks:
+  microservices-net:
+    driver: bridge
 
 volumes:
   mongo:
+  redis:
