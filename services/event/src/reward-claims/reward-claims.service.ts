@@ -1,12 +1,10 @@
 import {
-  BadRequestException,
-  ConflictException,
   ForbiddenException,
+  HttpStatus,
   Inject,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { firstValueFrom } from 'rxjs';
@@ -80,15 +78,24 @@ export class RewardClaimsService {
   private async validateEventForClaim(eventIdStr: string) {
     const event = await this.eventService.findById(eventIdStr);
     if (event.status !== EventStatus.ACTIVE) {
-      throw new BadRequestException('Event is not active.');
+      throw new RpcException({
+        message: 'Event is not active',
+        status: HttpStatus.BAD_REQUEST,
+      });
+      // throw new BadRequestException('Event is not active.');
     }
     const now = new Date();
     if (now < new Date(event.startAt) || now > new Date(event.endAt)) {
-      throw new BadRequestException('Event is not within the claim period');
+      throw new RpcException({
+        message: 'Event is not within the claim period',
+        status: HttpStatus.BAD_REQUEST,
+      });
+      // throw new BadRequestException('Event is not within the claim period');
     }
+
     return event;
   }
-  
+
   private async ensureNoDuplicateClaim(
     userId: Types.ObjectId,
     eventId: Types.ObjectId,
@@ -99,7 +106,11 @@ export class RewardClaimsService {
       status: RewardClaimStatus.SUCCESS,
     });
     if (existingSuccessClaim) {
-      throw new ConflictException('Reward already claimed for this event');
+      throw new RpcException({
+        message: 'Reward already claimed for this event',
+        status: HttpStatus.CONFLICT,
+      });
+      // throw new ConflictException('Reward already claimed for this event');
     }
 
     const existingPendingClaim = await this.rewardClaimModel.findOne({
@@ -108,9 +119,13 @@ export class RewardClaimsService {
       status: RewardClaimStatus.PENDING,
     });
     if (existingPendingClaim) {
-      throw new ConflictException(
-        'A claim request for this event is already pending',
-      );
+      throw new RpcException({
+        message: 'A claim request for this event is already pending',
+        status: HttpStatus.CONFLICT,
+      });
+      // throw new ConflictException(
+      //   'A claim request for this event is already pending',
+      // );
     }
   }
 
@@ -128,9 +143,13 @@ export class RewardClaimsService {
           conditions,
         );
       } catch (error) {
-        throw new InternalServerErrorException(
-          'Failed to verify event conditions due to an external error',
-        );
+        throw new RpcException({
+          message: 'Failed to verify event conditions due to an external error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        });
+        // throw new InternalServerErrorException(
+        //   'Failed to verify event conditions due to an external error',
+        // );
       }
       if (!conditionsMet) {
         failureReason = 'Event conditions not met';
