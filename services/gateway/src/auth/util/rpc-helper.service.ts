@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { RpcException } from '@nestjs/microservices';
 import { Response } from 'express';
 import { Observable, catchError, firstValueFrom, timeout } from 'rxjs';
 
@@ -16,31 +15,28 @@ export class RpcHelperService {
         observable.pipe(
           timeout(5000),
           catchError((err) => {
+            const parsed = JSON.parse(err.message);
             this.logger.error(
               `Auth Service communication error: ${err.message}`,
               err.stack,
             );
-            if (err instanceof RpcException) {
-              const rpcError = err.getError();
+            if (parsed instanceof Object) {
               if (
-                typeof rpcError === 'object' &&
-                rpcError !== null &&
-                'status' in rpcError &&
-                typeof rpcError['status'] === 'number' &&
-                'message' in rpcError
+                typeof parsed === 'object' &&
+                parsed !== null &&
+                'status' in parsed &&
+                typeof parsed['status'] === 'number' &&
+                'message' in parsed
               ) {
-                throw new HttpException(
-                  rpcError['message'],
-                  rpcError['status'],
-                );
+                throw new HttpException(parsed['message'], parsed['status']);
               }
               throw new HttpException(
-                err.message,
+                parsed.message,
                 HttpStatus.INTERNAL_SERVER_ERROR,
               );
             }
             throw new HttpException(
-              err.message || 'Auth Service communication error',
+              parsed.message || 'Auth Service communication error',
               HttpStatus.INTERNAL_SERVER_ERROR,
             );
           }),

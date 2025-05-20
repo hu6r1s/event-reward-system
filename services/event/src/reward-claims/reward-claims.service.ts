@@ -1,9 +1,4 @@
-import {
-  ForbiddenException,
-  HttpStatus,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -77,6 +72,7 @@ export class RewardClaimsService {
 
   private async validateEventForClaim(eventIdStr: string) {
     const event = await this.eventService.findById(eventIdStr);
+    
     if (event.status !== EventStatus.ACTIVE) {
       throw new RpcException({
         message: 'Event is not active',
@@ -204,8 +200,13 @@ export class RewardClaimsService {
   }
 
   async findUserClaims(userId: string): Promise<UserRewardClaimResponse[]> {
-    console.log(userId);
-    if (!userId) throw new ForbiddenException('User ID not found in request');
+    if (!userId) {
+      throw new RpcException({
+        message: 'User ID not found in request',
+        status: HttpStatus.FORBIDDEN,
+      });
+      // new ForbiddenException('User ID not found in request');
+    }
     const claims = await this.rewardClaimModel.find({ userId }).exec();
 
     return await Promise.all(
@@ -233,7 +234,6 @@ export class RewardClaimsService {
   ): Promise<RewardClaimListResponse> {
     const { page, limit, eventId, status } = queryDto;
     const skip = (page - 1) * limit;
-    console.log(page, limit, eventId, status);
 
     const filter: Record<string, any> = {};
     if (eventId) filter.eventId = eventId;

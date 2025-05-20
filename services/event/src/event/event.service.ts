@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EventStatus } from './constants/event.constants';
@@ -25,7 +22,11 @@ export class EventService {
   async create(request: CreateEventRequest): Promise<{ _id: string }> {
     const { startAt, endAt } = request;
     if (new Date(endAt) <= new Date(startAt)) {
-      throw new BadRequestException('End date must be after start date');
+      throw new RpcException({
+        message: 'End date must be after start date',
+        status: HttpStatus.BAD_REQUEST,
+      });
+      // throw new BadRequestException('End date must be after start date');
     }
 
     let status = request.status;
@@ -78,7 +79,11 @@ export class EventService {
   async findById(_id: string): Promise<EventResponse> {
     const event = await this.eventModel.findById(_id).exec();
     if (!event) {
-      throw new NotFoundException(`Event with ID "${_id}" not found`);
+      throw new RpcException({
+        message: `Event with ID "${_id}" not found`,
+        status: HttpStatus.NOT_FOUND,
+      });
+      // throw new NotFoundException(`Event with ID "${_id}" not found`);
     }
     return event;
   }
@@ -88,7 +93,13 @@ export class EventService {
     rewardDto: EventRewardDto,
   ): Promise<{ rewardId: string }> {
     const event = await this.eventModel.findOne({ _id: eventId });
-    if (!event) throw new NotFoundException('Not found event');
+    if (!event) {
+      throw new RpcException({
+        message: 'Not found event',
+        status: HttpStatus.NOT_FOUND,
+      });
+      // throw new NotFoundException('Not found event');
+    }
     event.rewards.push(rewardDto as EventRewardDto);
     const savedEvent = await event.save();
     const addReward = savedEvent.rewards[savedEvent.rewards.length - 1];

@@ -1,15 +1,11 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cache } from 'cache-manager';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { CreateUser } from './dto/create.dto';
-import { LoginStreakDto, LoginStreakResponse } from './dto/user-login.dto';
+import { LoginStreakDto } from './dto/user-login.dto';
 import { User, UserDocument } from './schemas/user.schema';
 
 @Injectable()
@@ -30,7 +26,15 @@ export class UserService {
 
   async findUserValidRefreshToken(_id: string) {
     const refreshToken = this.cacheManager.get(_id);
-    if (!refreshToken) throw new UnauthorizedException('Unauthorized token');
+    if (!refreshToken) {
+      throw new RpcException(
+        JSON.stringify({
+          message: 'Unauthorized token',
+          status: HttpStatus.UNAUTHORIZED,
+        }),
+      );
+      // throw new UnauthorizedException('Unauthorized token');
+    }
   }
 
   async update(_id: Types.ObjectId, loginStreakDto: LoginStreakDto) {
@@ -39,7 +43,13 @@ export class UserService {
       .exec();
 
     if (result.matchedCount === 0) {
-      throw new NotFoundException(`User with ID ${_id} not found`);
+      throw new RpcException(
+        JSON.stringify({
+          message: `User with ID ${_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+        }),
+      );
+      // throw new NotFoundException(`User with ID ${_id} not found`);
     }
   }
 }

@@ -1,10 +1,6 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { RpcException } from '@nestjs/microservices';
 import * as bcrypt from 'bcrypt';
 import { LoginStreakResponse } from 'src/user/dto/user-login.dto';
 import { UserService } from 'src/user/user.service';
@@ -31,7 +27,13 @@ export class AuthService {
     const { username, password, nickname, role } = request;
     const existing = await this.userService.findOne({ username });
     if (existing) {
-      throw new ConflictException('User already exists');
+      throw new RpcException(
+        JSON.stringify({
+          message: 'User already exists',
+          status: HttpStatus.CONFLICT,
+        }),
+      );
+      // throw new ConflictException('User already exists');
     }
 
     const salt = await bcrypt.genSalt(
@@ -56,7 +58,13 @@ export class AuthService {
       username: request.username,
     });
     if (!user) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new RpcException(
+        JSON.stringify({
+          message: 'Invalid username or password',
+          status: HttpStatus.UNAUTHORIZED,
+        }),
+      );
+      // throw new UnauthorizedException('Invalid username or password');
     }
 
     const passwordMatched = await bcrypt.compare(
@@ -65,7 +73,13 @@ export class AuthService {
     );
 
     if (!passwordMatched) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new RpcException(
+        JSON.stringify({
+          message: 'Invalid username or password',
+          status: HttpStatus.UNAUTHORIZED,
+        }),
+      );
+      // throw new UnauthorizedException('Invalid username or password');
     }
 
     const today = new Date();
@@ -111,7 +125,15 @@ export class AuthService {
     try {
       const payload = await this.tokenService.tokenVerify(refreshToken);
       const user = this.userService.findOne({ _id: payload.sub });
-      if (!user) throw new UnauthorizedException('Unverified user');
+      if (!user) {
+        throw new RpcException(
+          JSON.stringify({
+            message: 'Unverified user',
+            status: HttpStatus.UNAUTHORIZED,
+          }),
+        );
+        // throw new UnauthorizedException('Unverified user');
+      }
       return await this.tokenService.generateAccessToken({
         sub: payload.sub,
         username: payload.username,
@@ -119,13 +141,27 @@ export class AuthService {
       });
     } catch (error) {
       console.log(error);
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new RpcException(
+        JSON.stringify({
+          message: 'Invalid refresh token',
+          status: HttpStatus.UNAUTHORIZED,
+        }),
+      );
+      // throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   async getUserLoginStreak(_id: string): Promise<LoginStreakResponse> {
     const user = await this.userService.findOne({ _id });
-    if (!user) throw new NotFoundException(`User with ID ${_id} not found`);
+    if (!user) {
+      throw new RpcException(
+        JSON.stringify({
+          message: `User with ID ${_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+        }),
+      );
+      // throw new NotFoundException(`User with ID ${_id} not found`);
+    }
 
     return {
       username: user.username,
@@ -136,7 +172,15 @@ export class AuthService {
 
   async getUserInfo(_id: string): Promise<UserInfo> {
     const user = await this.userService.findOne({ _id });
-    if (!user) throw new NotFoundException(`User with ID ${_id} not found`);
+    if (!user) {
+      throw new RpcException(
+        JSON.stringify({
+          message: `User with ID ${_id} not found`,
+          status: HttpStatus.NOT_FOUND,
+        }),
+      );
+      // throw new NotFoundException(`User with ID ${_id} not found`);
+    }
 
     return {
       username: user.username,

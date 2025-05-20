@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { catchError, firstValueFrom, timeout } from 'rxjs';
 import { AuthenticatedUser } from 'src/auth/decorators/user.decorator';
 
@@ -27,19 +27,15 @@ export class RpcHelperService {
               `Event Service communication error: ${err.message}`,
               err.stack,
             );
-            if (err instanceof RpcException) {
-              const rpcError = err.getError();
+            if (err instanceof Object) {
               if (
-                typeof rpcError === 'object' &&
-                rpcError !== null &&
-                'status' in rpcError &&
-                typeof rpcError['status'] === 'number' &&
-                'message' in rpcError
+                typeof err === 'object' &&
+                err !== null &&
+                'status' in err &&
+                typeof err['status'] === 'number' &&
+                'message' in err
               ) {
-                throw new HttpException(
-                  rpcError['message'],
-                  rpcError['status'],
-                );
+                throw new HttpException(err['message'], err['status']);
               }
               throw new HttpException(
                 err.message,

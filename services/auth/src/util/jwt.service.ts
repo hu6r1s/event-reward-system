@@ -1,7 +1,8 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { RpcException } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { TokenPayload } from 'src/auth/auth.service';
 
@@ -47,7 +48,11 @@ export class TokenService {
 
     const storedToken = await this.cacheManager.get<string>(payload.sub);
     if (!storedToken || storedToken !== refreshToken) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+      throw new RpcException({
+        message: 'Invalid or expired refresh token',
+        status: HttpStatus.UNAUTHORIZED,
+      });
+      // throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
     return payload;
